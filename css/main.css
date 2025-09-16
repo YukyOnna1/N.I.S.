@@ -223,7 +223,7 @@ border-radius: 25px;
 }
 
 .features {
-    background: url('img/photo_2025-09-02_18-26-51.jpg') no-repeat center center fixed;
+    background: url('/N.I.S./img/photo_2025-09-02_18-26-51.jpg') no-repeat center center fixed;
     background-size: cover;
     padding: 80px 80px;
 }
@@ -890,4 +890,5 @@ document.addEventListener('DOMContentLoaded', function() {
         left: 0;
         min-width: 180px;
     }
+
 }
