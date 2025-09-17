@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noxious Inc Studio - Music Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #121212;
+            color: #f0f0f0;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Кнопка выхода */
+        .exit-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #333;
+            color: #ff8c00;
+            border: 1px solid #ff8c00;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .exit-button:hover {
+            background-color: #ff8c00;
+            color: #121212;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 140, 0, 0.4);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 30px;
+        }
+
+        .album-art {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 25px;
+            border: 8px solid #333;
+            border-radius: 5px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .album-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .album-art::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid rgba(255, 165, 0, 0.5);
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        .song-title {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .artist {
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+            color: #ccc;
+        }
+
+        .date {
+            font-size: 1rem;
+            color: #999;
+            margin-bottom: 30px;
+        }
+
+        .play-button {
+            background-color: #ff8c00;
+            color: #121212;
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            margin: 30px 0 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(255, 140, 0, 0.3);
+        }
+
+        .play-button:hover {
+            background-color: #ffa500;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(255, 140, 0, 0.4);
+        }
+
+        .play-button.playing {
+            background-color: #ff4500;
+        }
+
+        .player-controls {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: #333;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #ff8c00;
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .volume-icon {
+            margin-right: 10px;
+            color: #ff8c00;
+        }
+
+        .volume-slider {
+            width: 100px;
+            -webkit-appearance: none;
+            height: 5px;
+            background: #333;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #ff8c00;
+            cursor: pointer;
+        }
+
+        .columns {
+            display: flex;
+            gap: 40px;
+            margin: 40px 0 60px;
+        }
+
+        .column {
+            flex: 1;
+            background-color: #1e1e1e;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .column h2 {
+            color: #ff8c00;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        .lyrics, .translation {
+            white-space: pre-line;
+            line-height: 1.8;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid #333;
+        }
+
+        .blocks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .blocks > div {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ff8c00;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        h4 {
+            color: #ff8c00;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        ul li {
+            margin-bottom: 8px;
+        }
+
+        ul li::before {
+            content: "•";
+            color: #ff8c00;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+
+        hr {
+            border: none;
+            height: 1px;
+            background-color: #333;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .columns {
+                flex-direction: column;
+            }
+            
+            .album-art {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .song-title {
+                font-size: 2.2rem;
+            }
+            
+            .exit-button {
+                top: 10px;
+                right: 10px;
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Кнопка выхода -->
+    <button class="exit-button" id="exitButton">Exit to Music</button>
+    
+    <header>
+        <div class="album-art">
+            <img src="img/photo_2025-09-17_11-57-28.jpg" alt="Album Cover">
+        </div>
+        <h1 class="song-title">Pixel Madness (Key-metal remix)</h1>
+        <p class="artist">Yuky_Onna</p>
+        <p class="date">Released: September 16, 2025</p>
+        
+        <button class="play-button" id="playButton">Listen</button>
+        
+        <div class="player-controls">
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="time-display">
+                <span id="currentTime">0:00</span>
+                <span id="duration">0:00</span>
+            </div>
+            
+            <div class="volume-control">
+                <div class="volume-icon">🔊</div>
+                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="1">
+            </div>
+        </div>
+        
+        <audio id="audioPlayer">
+            <source src="Music/Pixel madness (1) (mp3cut.net)-1.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </header>
+    
+    <main>
+        <div class="columns">
+            <div class="column">
+                <h2>Lyrics</h2>
+                <div class="lyrics">
+<p></p>(Intro)
+<p></p>Get ready, the final boss is about to wake up....
+<p></p>3...
+<p></p>2...
+<p></p>1...
+<p></p>FIGHT!
+<p></p>
+<p></p>(Verse 1)
+<p></p>The screen is glowing in the dark
+<p></p>We're jumping right into the spark!
+<p></p>Dodging bullets, shooting straight
+<p></p>Another night we celebrate!
+<p></p>The high score's flashing, hear the beat
+<p></p>A pixel perfect, sweet repeat!
+<p></p>
+<p></p>(Pre-Chorus)
+<p></p>The health bar's blinking, almost dead
+<p></p>The final words remain unsaid
+<p></p>Our combo counter's running high
+<p></p>Beneath the pixel eated sky!
+<p></p>
+<p></p>(Chorus)
+<p></p>It's Pixel Madness, feel the rush
+<p></p>Under the CRT's soft blush
+<p></p>We're mashing buttons, breaking chains
+<p></p>While digit blood runs through the veins
+<p></p>
+<p></p>(Verse 2)
+<p></p>Hadouken fire in the night
+<p></p>A blue armor knight prepares to fight!
+<p></p>A kiss of death, a blinding flash
+<p></p>Then silence...after bloody splash!
+<p></p>The maze is waiting, ghosts are near
+<p></p>The final battle's almost here!
+<p></p>
+<p></p>(Pre-Chorus)
+<p></p>The health bar's blinking, almost dead
+<p></p>The final words remain unsaid!
+<p></p>Our combo counter's running high
+<p></p>Beneath the pixel eated sky!
+<p></p>
+<p></p>(Chorus)
+<p></p>It's Pixel Madness, feel the rush
+<p></p>Under the CRT's soft blush
+<p></p>We're mashing buttons, breaking chains
+<p></p>While digit blood runs through the veins
+<p></p>It's Pixel Madness, can't you see?
+<p></p>This glitchy world of you and me!
+<p></p>
+<p></p>(Bridge)
+<p></p>The music slows, the tension grows...
+<p></p>The boss entered anger pose...
+<p></p>
+<p></p>(Guitar solo)
+<p></p>
+<p></p>(Breakdown)
+<p></p>Crush...smash... win... or die... Finish him!...
+<p></p>...oops...missclick.
+<p></p>
+<p></p>(Final Chorus)
+<p></p>It's PIXEL MADNESS! FINAL RUSH!
+<p></p>Our quarter's down to its last crush!
+<p></p>We're mashing buttons, breaking chains!
+<p></p>Our legacy is in these veins!
+<p></p>It's PIXEL MADNESS! Can't you see?
+<p></p>This glitch is made by legacy!
+<p></p>
+<p></p>(Outro)
+<p></p>Game over. Please...deposit five coins to continue....
+                </div>
+            </div>
+            
+            <div class="column">
+                <h2>Translate</h2>
+                <div class="translation">
+Coming soon...
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="blocks">
+            <div>
+                <span class="logo">Noxious Inc Studio</span>
+                <p>We will be happy if you follow us on social media</p>
+            </div>
+            <div>
+                <h4>About us</h4>
+                <ul>
+                    <li>Yuky_Onna</li>
+                    <li>Veliant</li>
+                    <li>Kurai</li>
+                    <li>Fon Mandarin</li>
+                    <li>Luna</li>
+                </ul>
+            </div>
+            <div>
+                <h4>Contact us</h4>
+                <p>◈ 𝙏𝙚𝙡𝙚𝙜𝙧𝙖𝙢 𝙘𝙝𝙖𝙣𝙣𝙚𝙡:
+                https://t.me/NoxiousIncStudioOfficial</p>
+                <p>◈ 𝙀𝙢𝙖𝙞𝙡:
+                yuky_onna@mail.ru</p>
+                <p>◈ 𝙋𝙞𝙣𝙩𝙚𝙧𝙚𝙨𝙩:
+                https://pin.it/1MqtL8qpg</p>
+                <p>◈ 𝘼𝙪𝙩𝙝𝙤𝙧.𝙩𝙤𝙙𝙖𝙮:
+                http://author.today/u/Yuky_Onna</p>
+            </div>
+        </div>
+        <hr>
+        <p>Copyright ® 2025 All rights Reserved</p>
+    </footer>
+
+    <script>
+        const playButton = document.getElementById('playButton');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const exitButton = document.getElementById('exitButton');
+        
+        // Кнопка выхода
+        exitButton.addEventListener('click', function() {
+            window.location.href = 'music.html';
+        });
+        
+        // Play/Pause functionality
+        playButton.addEventListener('click', function() {
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                playButton.textContent = 'Pause';
+                playButton.classList.add('playing');
+            } else {
+                audioPlayer.pause();
+                playButton.textContent = 'Listen';
+                playButton.classList.remove('playing');
+            }
+        });
+        
+        // Update progress bar
+        audioPlayer.addEventListener('timeupdate', updateProgress);
+        
+        // Set progress on click
+        progressContainer.addEventListener('click', setProgress);
+        
+        // Update volume
+        volumeSlider.addEventListener('change', function() {
+            audioPlayer.volume = volumeSlider.value;
+        });
+        
+        // When audio ends
+        audioPlayer.addEventListener('ended', function() {
+            playButton.textContent = 'Listen';
+            playButton.classList.remove('playing');
+            audioPlayer.currentTime = 0;
+            progressBar.style.width = '0%';
+            currentTimeEl.textContent = '0:00';
+        });
+        
+        // Update duration when metadata is loaded
+        audioPlayer.addEventListener('loadedmetadata', function() {
+            const duration = audioPlayer.duration;
+            const minutes = Math.floor(duration / 60);
+            const seconds = Math.floor(duration % 60);
+            durationEl.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        });
+        
+        // Format time
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+        
+        // Update progress bar
+        function updateProgress() {
+            const { currentTime, duration } = audioPlayer;
+            const progressPercent = (currentTime / duration) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+            currentTimeEl.textContent = formatTime(currentTime);
+        }
+        
+        // Set progress on click
+        function setProgress(e) {
+            const width = this.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audioPlayer.duration;
+            audioPlayer.currentTime = (clickX / width) * duration;
+        }
+    </script>
+</body>
+
+</html>
