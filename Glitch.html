@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Failure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'VT323', 'Courier New', monospace;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        /* Кастомный курсор */
+        .cursor {
+            position: fixed;
+            width: 16px;
+            height: 16px;
+            background-color: #ff0000;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: difference;
+            transition: transform 0.1s;
+        }
+
+        /* Стили для агрессивных надписей */
+        .aggressive-text {
+            position: absolute;
+            color: #ff0000;
+            font-size: 3.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000;
+            animation: shake 0.1s infinite;
+            z-index: 10;
+            font-family: 'Orbitron', 'VT323', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        /* Стили для помех */
+        .static {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            opacity: 0;
+            z-index: 5;
+        }
+
+        /* Стили для всплывающих окон */
+        .popup {
+            position: absolute;
+            background-color: #c0c0c0;
+            border: 2px outset #dfdfdf;
+            color: #000;
+            font-family: 'MS Sans Serif', sans-serif;
+            font-size: 12px;
+            padding: 10px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            z-index: 20;
+            width: 300px;
+            min-height: 150px;
+        }
+
+        .popup-header {
+            background: linear-gradient(to right, #000080, #1084d0);
+            color: white;
+            padding: 3px 5px;
+            font-weight: bold;
+            margin: -10px -10px 5px -10px;
+        }
+
+        .popup-content {
+            padding: 10px 0;
+        }
+
+        .popup-buttons {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .popup-button {
+            background-color: #c0c0c0;
+            border: 2px outset #dfdfdf;
+            padding: 3px 15px;
+            font-family: 'MS Sans Serif', sans-serif;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Стили для кнопки GO AWAY */
+        #goAwayBtn {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ff0000;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            animation: shake 0.1s infinite;
+            z-index: 100;
+            cursor: pointer;
+            font-family: 'Orbitron', 'VT323', monospace;
+            letter-spacing: 3px;
+        }
+
+        /* Стили для финального сообщения */
+        #finalMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff0000;
+            font-size: 4.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 40px #ff0000;
+            text-align: center;
+            opacity: 0;
+            z-index: 200;
+            font-family: 'Orbitron', 'VT323', monospace;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+        }
+
+        /* Стили для кругового градиента */
+        .circle-gradient {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff0000 0%, #000 70%);
+            opacity: 0;
+            z-index: 150;
+        }
+
+        /* Стили для мерцания */
+        .flicker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            opacity: 0;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        /* Новые стили для дополнительных эффектов */
+        .red-flicker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ff0000;
+            opacity: 0;
+            z-index: 6;
+            pointer-events: none;
+        }
+
+        .blue-flicker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0000ff;
+            opacity: 0;
+            z-index: 6;
+            pointer-events: none;
+        }
+
+        .green-flicker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #00ff00;
+            opacity: 0;
+            z-index: 6;
+            pointer-events: none;
+        }
+
+        .dripping-pixel {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background-color: #ff0000;
+            z-index: 8;
+            pointer-events: none;
+        }
+
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #ff0000, transparent);
+            z-index: 7;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .glitch-line {
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background-color: #ff0000;
+            z-index: 7;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .matrix-rain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 4;
+            opacity: 0.3;
+        }
+
+        .binary-code {
+            position: absolute;
+            color: #00ff00;
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            z-index: 3;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Новые эффекты */
+        .data-stream {
+            position: absolute;
+            color: #00ffff;
+            font-family: 'VT323', monospace;
+            font-size: 1.4rem;
+            z-index: 3;
+            opacity: 0;
+            pointer-events: none;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .eye {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #ff0000 0%, #8b0000 70%);
+            border-radius: 50%;
+            z-index: 15;
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 0 20px #ff0000;
+        }
+
+        .eye::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 30px;
+            height: 30px;
+            background-color: #000;
+            border-radius: 50%;
+        }
+
+        .corruption {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 50px,
+                    rgba(255, 0, 0, 0.1) 50px,
+                    rgba(255, 0, 0, 0.1) 100px
+                );
+            z-index: 2;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .blood-splatter {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(255, 0, 0, 0.3) 0%, transparent 20%),
+                radial-gradient(circle at 80% 70%, rgba(255, 0, 0, 0.2) 0%, transparent 25%),
+                radial-gradient(circle at 40% 80%, rgba(255, 0, 0, 0.25) 0%, transparent 30%);
+            z-index: 1;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .terminal-text {
+            position: absolute;
+            color: #00ff00;
+            font-family: 'VT323', monospace;
+            font-size: 1.1rem;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .face {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(ellipse, rgba(255, 0, 0, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 12;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .face::before, .face::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 50px;
+            background: radial-gradient(ellipse, #ff0000 0%, transparent 70%);
+            border-radius: 50%;
+            top: 60px;
+        }
+
+        .face::before {
+            left: 40px;
+        }
+
+        .face::after {
+            right: 40px;
+        }
+
+        .distortion {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(255, 0, 0, 0.05) 10px,
+                    rgba(255, 0, 0, 0.05) 20px
+                );
+            z-index: 3;
+            opacity: 0;
+            pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+
+        .breathing-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 30%, rgba(0, 0, 0, 0.9) 70%);
+            z-index: 4;
+            opacity: 0;
+            pointer-events: none;
+            animation: breathe 8s infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 0.7; }
+        }
+
+        .security-camera {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border: 3px solid #ff0000;
+            border-radius: 50%;
+            z-index: 15;
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 0 20px #ff0000;
+        }
+
+        .security-camera::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #ff0000 0%, #8b0000 70%);
+            border-radius: 50%;
+        }
+
+        .security-camera::after {
+            content: '';
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            width: 20px;
+            height: 20px;
+            background-color: #000;
+            border-radius: 50%;
+        }
+
+        .hacking-text {
+            position: absolute;
+            color: #ff0000;
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            text-shadow: 0 0 10px #ff0000;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="cursor"></div>
+    <div id="aggressiveTexts"></div>
+    <div id="static"></div>
+    <div id="popups"></div>
+    <div id="flicker"></div>
+    <div id="redFlicker"></div>
+    <div id="blueFlicker"></div>
+    <div id="greenFlicker"></div>
+    <div id="drippingPixels"></div>
+    <div id="scanLines"></div>
+    <div id="glitchLines"></div>
+    <div id="matrixRain"></div>
+    <div id="binaryCodes"></div>
+    <div id="dataStreams"></div>
+    <div id="eyes"></div>
+    <div id="corruption"></div>
+    <div id="bloodSplatter"></div>
+    <div id="terminalTexts"></div>
+    <div id="faces"></div>
+    <div id="distortion"></div>
+    <div id="breathingEffect"></div>
+    <div id="securityCameras"></div>
+    <div id="hackingTexts"></div>
+    <div class="circle-gradient"></div>
+    <div id="finalMessage">WE'LL MEET LATER, YOU BASTARD</div>
+    <button id="goAwayBtn">GO AWAY</button>
+
+    <audio id="backgroundMusic" loop>
+        <source src="Music/Glitch forever (1) (mp3cut.net).mp3" type="audio/mpeg">
+    </audio>
+    <audio id="popupSound">
+        <source src="Music/af6738ba210e593.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="finalSound">
+        <source src="Music/d47b6a43e277723.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="finalAudio">
+        <source src="Music/final-audio.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="heartbeat">
+        <source src="Music/heartbeat.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="whisper">
+        <source src="Music/whisper.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // Элементы DOM
+        const aggressiveTextsContainer = document.getElementById('aggressiveTexts');
+        const staticElement = document.getElementById('static');
+        const popupsContainer = document.getElementById('popups');
+        const flickerElement = document.getElementById('flicker');
+        const redFlickerElement = document.getElementById('redFlicker');
+        const blueFlickerElement = document.getElementById('blueFlicker');
+        const greenFlickerElement = document.getElementById('greenFlicker');
+        const drippingPixelsContainer = document.getElementById('drippingPixels');
+        const scanLinesContainer = document.getElementById('scanLines');
+        const glitchLinesContainer = document.getElementById('glitchLines');
+        const matrixRainContainer = document.getElementById('matrixRain');
+        const binaryCodesContainer = document.getElementById('binaryCodes');
+        const dataStreamsContainer = document.getElementById('dataStreams');
+        const eyesContainer = document.getElementById('eyes');
+        const corruptionElement = document.getElementById('corruption');
+        const bloodSplatterElement = document.getElementById('bloodSplatter');
+        const terminalTextsContainer = document.getElementById('terminalTexts');
+        const facesContainer = document.getElementById('faces');
+        const distortionElement = document.getElementById('distortion');
+        const breathingEffectElement = document.getElementById('breathingEffect');
+        const securityCamerasContainer = document.getElementById('securityCameras');
+        const hackingTextsContainer = document.getElementById('hackingTexts');
+        const goAwayBtn = document.getElementById('goAwayBtn');
+        const finalMessage = document.getElementById('finalMessage');
+        const circleGradient = document.querySelector('.circle-gradient');
+        const cursor = document.querySelector('.cursor');
+        
+        // Аудио элементы
+        const backgroundMusic = document.getElementById('backgroundMusic');
+        const popupSound = document.getElementById('popupSound');
+        const finalSound = document.getElementById('finalSound');
+        const finalAudio = document.getElementById('finalAudio');
+        const heartbeatAudio = document.getElementById('heartbeat');
+        const whisperAudio = document.getElementById('whisper');
+
+        // Массив агрессивных фраз
+        const aggressivePhrases = [
+            "GET OUT",
+            "I DIDN'T CALL YOU",
+            "DON'T BLEED YOURSELF",
+            "GET OUT OF HERE",
+            "WHAT THE FUCK ARE YOU DOING HERE"
+        ];
+
+        // Переменные для управления анимациями
+        let aggressiveTextInterval;
+        let staticInterval;
+        let popupInterval;
+        let flickerInterval;
+        let redFlickerInterval;
+        let blueFlickerInterval;
+        let greenFlickerInterval;
+        let snakePopupInterval;
+        let drippingPixelsInterval;
+        let scanLinesInterval;
+        let glitchLinesInterval;
+        let binaryCodesInterval;
+        let dataStreamsInterval;
+        let eyesInterval;
+        let corruptionInterval;
+        let bloodSplatterInterval;
+        let terminalTextsInterval;
+        let facesInterval;
+        let distortionInterval;
+        let breathingInterval;
+        let securityCamerasInterval;
+        let hackingTextsInterval;
+        let isFinalStage = false;
+
+        // Инициализация
+        function init() {
+            // Начинаем воспроизведение фоновой музыки
+            backgroundMusic.play().catch(e => console.log("Автовоспроизведение заблокировано:", e));
+            
+            // Запускаем эффекты с задержкой
+            setTimeout(startAggressiveTexts, 3000);
+            setTimeout(startStatic, 5000);
+            setTimeout(startRandomPopups, 7000);
+            setTimeout(startFlicker, 10000);
+            setTimeout(startRedFlicker, 12000);
+            setTimeout(startBlueFlicker, 14000);
+            setTimeout(startGreenFlicker, 16000);
+            setTimeout(startDrippingPixels, 8000);
+            setTimeout(startScanLines, 9000);
+            setTimeout(startGlitchLines, 11000);
+            setTimeout(startBinaryCodes, 13000);
+            setTimeout(startDataStreams, 15000);
+            setTimeout(startEyes, 17000);
+            setTimeout(startCorruption, 19000);
+            setTimeout(startBloodSplatter, 21000);
+            setTimeout(startTerminalTexts, 23000);
+            setTimeout(startFaces, 25000);
+            setTimeout(startDistortion, 27000);
+            setTimeout(startBreathingEffect, 29000);
+            setTimeout(startSecurityCameras, 31000);
+            setTimeout(startHackingTexts, 33000);
+            setTimeout(startSnakePopups, 15000);
+            
+            // Начинаем воспроизведение сердцебиения и шепота
+            setTimeout(() => {
+                heartbeatAudio.play().catch(e => console.log("Ошибка воспроизведения сердцебиения:", e));
+            }, 20000);
+            
+            setTimeout(() => {
+                whisperAudio.play().catch(e => console.log("Ошибка воспроизведения шепота:", e));
+            }, 25000);
+            
+            // Настраиваем кастомный курсор
+            document.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+                
+                // Добавляем лаги для курсора
+                if (Math.random() > 0.7) {
+                    setTimeout(() => {
+                        cursor.style.left = (e.clientX + (Math.random() * 20 - 10)) + 'px';
+                        cursor.style.top = (e.clientY + (Math.random() * 20 - 10)) + 'px';
+                    }, 50);
+                }
+            });
+            
+            // Обработчик для кнопки GO AWAY
+            goAwayBtn.addEventListener('click', startFinalSequence);
+        }
+
+        // Функция для запуска агрессивных текстов
+        function startAggressiveTexts() {
+            aggressiveTextInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                const phrase = aggressivePhrases[Math.floor(Math.random() * aggressivePhrases.length)];
+                const textElement = document.createElement('div');
+                textElement.className = 'aggressive-text';
+                textElement.textContent = phrase;
+                
+                // Случайное позиционирование
+                textElement.style.left = Math.random() * 70 + '%';
+                textElement.style.top = Math.random() * 70 + '%';
+                
+                // Случайный размер
+                textElement.style.fontSize = (3 + Math.random() * 1.5) + 'rem';
+                
+                aggressiveTextsContainer.appendChild(textElement);
+                
+                // Удаляем текст через 5 секунд
+                setTimeout(() => {
+                    if (textElement.parentNode) {
+                        textElement.parentNode.removeChild(textElement);
+                    }
+                }, 5000);
+            }, 3000);
+        }
+
+        // Функция для запуска помех
+        function startStatic() {
+            staticInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                // Случайная интенсивность помех
+                const intensity = Math.random();
+                staticElement.style.opacity = intensity * 0.7;
+                
+                // Случайная длительность
+                setTimeout(() => {
+                    staticElement.style.opacity = 0;
+                }, Math.random() * 1000 + 200);
+            }, 1500);
+        }
+
+        // Функция для запуска случайных всплывающих окон
+        function startRandomPopups() {
+            popupInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                createRandomPopup();
+            }, 5000);
+        }
+
+        // Функция для создания случайного всплывающего окна
+        function createRandomPopup() {
+            const popup = document.createElement('div');
+            popup.className = 'popup';
+            
+            // Случайное позиционирование
+            popup.style.left = Math.random() * 70 + '%';
+            popup.style.top = Math.random() * 70 + '%';
+            
+            // Случайное содержимое
+            const errorMessages = [
+                "Fatal System Error",
+                "Memory Access Violation",
+                "Critical Process Terminated",
+                "System32 Corruption Detected",
+                "Kernel Panic",
+                "Access Denied",
+                "Illegal Operation"
+            ];
+            
+            const randomMessage = errorMessages[Math.floor(Math.random() * errorMessages.length)];
+            
+            popup.innerHTML = `
+                <div class="popup-header">System Error</div>
+                <div class="popup-content">${randomMessage}</div>
+                <div class="popup-buttons">
+                    <button class="popup-button">OK</button>
+                    <button class="popup-button">Cancel</button>
+                </div>
+            `;
+            
+            popupsContainer.appendChild(popup);
+            
+            // Удаляем окно через случайное время
+            setTimeout(() => {
+                if (popup.parentNode) {
+                    popup.parentNode.removeChild(popup);
+                }
+            }, Math.random() * 3000 + 2000);
+        }
+
+        // Функция для запуска мерцания белым
+        function startFlicker() {
+            flickerInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                // Случайное мерцание
+                if (Math.random() > 0.7) {
+                    flickerElement.style.opacity = 0.3 + Math.random() * 0.7;
+                    
+                    setTimeout(() => {
+                        flickerElement.style.opacity = 0;
+                    }, 50 + Math.random() * 150);
+                }
+            }, 1000);
+        }
+
+        // Функция для запуска мерцания красным
+        function startRedFlicker() {
+            redFlickerInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                // Случайное мерцание красным
+                if (Math.random() > 0.8) {
+                    redFlickerElement.style.opacity = 0.2 + Math.random() * 0.5;
+                    
+                    setTimeout(() => {
+                        redFlickerElement.style.opacity = 0;
+                    }, 100 + Math.random() * 200);
+                }
+            }, 1200);
+        }
+
+        // Функция для запуска мерцания синим
+        function startBlueFlicker() {
+            blueFlickerInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                // Случайное мерцание синим
+                if (Math.random() > 0.85) {
+                    blueFlickerElement.style.opacity = 0.1 + Math.random() * 0.4;
+                    
+                    setTimeout(() => {
+                        blueFlickerElement.style.opacity = 0;
+                    }, 80 + Math.random() * 150);
+                }
+            }, 1500);
+        }
+
+        // Функция для запуска мерцания зеленым
+        function startGreenFlicker() {
+            greenFlickerInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                // Случайное мерцание зеленым
+                if (Math.random() > 0.9) {
+                    greenFlickerElement.style.opacity = 0.1 + Math.random() * 0.3;
+                    
+                    setTimeout(() => {
+                        greenFlickerElement.style.opacity = 0;
+                    }, 60 + Math.random() * 120);
+                }
+            }, 1800);
+        }
+
+        // Функция для запуска капающих пикселей
+        function startDrippingPixels() {
+            drippingPixelsInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                if (Math.random() > 0.5) {
+                    const pixel = document.createElement('div');
+                    pixel.className = 'dripping-pixel';
+                    
+                    // Случайное позиционирование сверху
+                    pixel.style.left = Math.random() * 100 + '%';
+                    pixel.style.top = '0px';
+                    
+                    drippingPixelsContainer.appendChild(pixel);
+                    
+                    // Анимация падения
+                    let topPos = 0;
+                    const fallInterval = setInterval(() => {
+                        topPos += 2 + Math.random() * 3;
+                        pixel.style.top = topPos + 'px';
+                        
+                        if (topPos > window.innerHeight) {
+                            clearInterval(fallInterval);
+                            if (pixel.parentNode) {
+                                pixel.parentNode.removeChild(pixel);
+                            }
+                        }
+                    }, 30);
+                }
+            }, 200);
+        }
+
+        // Функция для запуска сканирующих линий
+        function startScanLines() {
+            scanLinesInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                if (Math.random() > 0.7) {
+                    const scanLine = document.createElement('div');
+                    scanLine.className = 'scan-line';
+                    
+                    // Случайная позиция по вертикали
+                    scanLine.style.top = Math.random() * 100 + '%';
+                    scanLine.style.opacity = 0.7;
+                    
+                    scanLinesContainer.appendChild(scanLine);
+                    
+                    // Убираем линию через время
+                    setTimeout(() => {
+                        scanLine.style.opacity = 0;
+                        setTimeout(() => {
+                            if (scanLine.parentNode) {
+                                scanLine.parentNode.removeChild(scanLine);
+                            }
+                        }, 1000);
+                    }, 500);
+                }
+            }, 1500);
+        }
+
+        // Функция для запуска глитч-линий
+        function startGlitchLines() {
+            glitchLinesInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                if (Math.random() > 0.6) {
+                    const glitchLine = document.createElement('div');
+                    glitchLine.className = 'glitch-line';
+                    
+                    // Случайная позиция по вертикали
+                    glitchLine.style.top = Math.random() * 100 + '%';
+                    glitchLine.style.opacity = 0.8;
+                    
+                    glitchLinesContainer.appendChild(glitchLine);
+                    
+                    // Убираем линию через время
+                    setTimeout(() => {
+                        glitchLine.style.opacity = 0;
+                        setTimeout(() => {
+                            if (glitchLine.parentNode) {
+                                glitchLine.parentNode.removeChild(glitchLine);
+                            }
+                        }, 500);
+                    }, 100 + Math.random() * 300);
+                }
+            }, 800);
+        }
+
+        // Функция для запуска двоичного кода
+        function startBinaryCodes() {
+            binaryCodesInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                if (Math.random() > 0.5) {
+                    const binary = document.createElement('div');
+                    binary.className = 'binary-code';
+                    
+                    // Генерируем случайный двоичный код
+                    let binaryText = '';
+                    for (let i = 0; i < 10; i++) {
+                        binaryText += Math.round(Math.random()) + ' ';
+                    }
+                    
+                    binary.textContent = binaryText;
+                    
+                    // Случайное позиционирование
+                    binary.style.left = Math.random() * 90 + '%';
+                    binary.style.top = Math.random() * 90 + '%';
+                    binary.style.opacity = 0.7;
+                    
+                    binaryCodesContainer.appendChild(binary);
+                    
+                    // Убираем код через время
+                    setTimeout(() => {
+                        binary.style.opacity = 0;
+                        setTimeout(() => {
+                            if (binary.parentNode) {
+                                binary.parentNode.removeChild(binary);
+                            }
+                        }, 1000);
+                    }, 2000);
+                }
+            }, 2500);
+        }
+
+        // Функция для запуска потоков данных
+        function startDataStreams() {
+            dataStreamsInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                if (Math.random() > 0.6) {
+                    const dataStream = document.createElement('div');
+                    dataStream.className = 'data-stream';
+                    
+                    // Генерируем случайный поток данных
+                    let dataText = '';
+                    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$#@%&*';
+                    for (let i = 0; i < 15; i++) {
+                        dataText += chars.charAt(Math.floor(Math.random() * chars.length));
+                    }
+                    
+                    dataStream.textContent = dataText;
+                    
+                    // Случайное позиционирование
+                    dataStream.style.left = Math.random() * 90 + '%';
+                    dataStream.style.top = Math.random() * 90 + '%';
+                    dataStream.style.opacity = 0.8;
+                    
+                    dataStreamsContainer.appendChild(dataStream);
+                    
+                    // Убираем поток через время
+                    setTimeout(() => {
+                        dataStream.style.opacity = 0;
+                        setTimeout(() => {
+                            if (dataStream.parentNode) {
+                                dataStream.parentNode.removeChild(dataStream);
+                            }
+                        }, 1000);
+                    }, 1500);
+                }
+            }, 3000);
+        }
+
+        // Функция для запуска глаз
+        function startEyes() {
+            eyesInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                if (Math.random() > 0.8) {
+                    const eye = document.createElement('div');
+                    eye.className = 'eye';
+                    
+                    // Случайное позиционирование
+                    eye.style.left = Math.random() * 85 + '%';
+                    eye.style.top = Math.random() * 85 + '%';
+                    eye.style.opacity = 0.9;
+                    
+                    eyesContainer.appendChild(eye);
+                    
+                    // Убираем глаз через время
+                    setTimeout(() => {
+                        eye.style.opacity = 0;
+                        setTimeout(() => {
+                            if (eye.parentNode) {
+                                eye.parentNode.removeChild(eye);
+                            }
+                        }, 1000);
+                    }, 2000);
+                }
+            }, 4000);
+        }
+
+        // Функция для запуска коррупции
+        function startCorruption() {
+            corruptionInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                if (Math.random() > 0.7) {
+                    corruptionElement.style.opacity = 0.1 + Math.random() * 0.3;
+                    
+                    setTimeout(() => {
+                        corruptionElement.style.opacity = 0;
+                    }, 500 + Math.random() * 1000);
+                }
+            }, 3000);
+        }
+
+        // Функция для запуска брызг крови
+        function startBloodSplatter() {
+            bloodSplatterInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                if (Math.random() > 0.9) {
+                    bloodSplatterElement.style.opacity = 0.1 + Math.random() * 0.2;
+                    
+                    setTimeout(() => {
+                        bloodSplatterElement.style.opacity = 0;
+                    }, 1000 + Math.random() * 2000);
+                }
+            }, 5000);
+        }
+
+        // Функция для запуска терминального текста
+        function startTerminalTexts() {
+            terminalTextsInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                if (Math.random() > 0.7) {
+                    const terminalText = document.createElement('div');
+                    terminalText.className = 'terminal-text';
+                    
+                    // Случайный терминальный текст
+                    const terminalMessages = [
+                        "ACCESSING SYSTEM...",
+                        "DOWNLOADING DATA...",
+                        "SCANNING NETWORK...",
+                        "BREACHING SECURITY...",
+                        "EXTRACTING FILES...",
+                        "TRACKING USER...",
+                        "INJECTING PAYLOAD...",
+                        "OVERRIDING PROTECTION..."
+                    ];
+                    
+                    const randomMessage = terminalMessages[Math.floor(Math.random() * terminalMessages.length)];
+                    terminalText.textContent = randomMessage;
+                    
+                    // Случайное позиционирование
+                    terminalText.style.left = Math.random() * 80 + '%';
+                    terminalText.style.top = Math.random() * 80 + '%';
+                    terminalText.style.opacity = 0.8;
+                    
+                    terminalTextsContainer.appendChild(terminalText);
+                    
+                    // Убираем текст через время
+                    setTimeout(() => {
+                        terminalText.style.opacity = 0;
+                        setTimeout(() => {
+                            if (terminalText.parentNode) {
+                                terminalText.parentNode.removeChild(terminalText);
+                            }
+                        }, 1000);
+                    }, 3000);
+                }
+            }, 3500);
+        }
+
+        // Функция для запуска лиц
+        function startFaces() {
+            facesInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                if (Math.random() > 0.9) {
+                    const face = document.createElement('div');
+                    face.className = 'face';
+                    
+                    // Случайное позиционирование
+                    face.style.left = Math.random() * 70 + '%';
+                    face.style.top = Math.random() * 70 + '%';
+                    face.style.opacity = 0.1 + Math.random() * 0.2;
+                    
+                    facesContainer.appendChild(face);
+                    
+                    // Убираем лицо через время
+                    setTimeout(() => {
+                        face.style.opacity = 0;
+                        setTimeout(() => {
+                            if (face.parentNode) {
+                                face.parentNode.removeChild(face);
+                            }
+                        }, 1000);
+                    }, 2000);
+                }
+            }, 6000);
+        }
+
+        // Функция для запуска искажения
+        function startDistortion() {
+            distortionInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                if (Math.random() > 0.8) {
+                    distortionElement.style.opacity = 0.05 + Math.random() * 0.1;
+                    
+                    setTimeout(() => {
+                        distortionElement.style.opacity = 0;
+                    }, 300 + Math.random() * 700);
+                }
+            }, 2000);
+        }
+
+        // Функция для запуска эффекта дыхания
+        function startBreathingEffect() {
+            breathingInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                if (Math.random() > 0.9) {
+                    breathingEffectElement.style.opacity = 0.5;
+                    
+                    setTimeout(() => {
+                        breathingEffectElement.style.opacity = 0;
+                    }, 4000);
+                }
+            }, 10000);
+        }
+
+        // Функция для запуска камер наблюдения
+        function startSecurityCameras() {
+            securityCamerasInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                if (Math.random() > 0.85) {
+                    const camera = document.createElement('div');
+                    camera.className = 'security-camera';
+                    
+                    // Случайное позиционирование
+                    camera.style.left = Math.random() * 85 + '%';
+                    camera.style.top = Math.random() * 85 + '%';
+                    camera.style.opacity = 0.8;
+                    
+                    securityCamerasContainer.appendChild(camera);
+                    
+                    // Убираем камеру через время
+                    setTimeout(() => {
+                        camera.style.opacity = 0;
+                        setTimeout(() => {
+                            if (camera.parentNode) {
+                                camera.parentNode.removeChild(camera);
+                            }
+                        }, 1000);
+                    }, 3000);
+                }
+            }, 5000);
+        }
+
+        // Функция для запуска хакерских текстов
+        function startHackingTexts() {
+            hackingTextsInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                if (Math.random() > 0.8) {
+                    const hackingText = document.createElement('div');
+                    hackingText.className = 'hacking-text';
+                    
+                    // Случайный хакерский текст
+                    const hackingMessages = [
+                        "I SEE YOU",
+                        "YOU CAN'T HIDE",
+                        "YOUR DATA IS MINE",
+                        "SYSTEM COMPROMISED",
+                        "I'M INSIDE",
+                        "WATCHING YOU",
+                        "DON'T TRY TO ESCAPE",
+                        "YOUR FILES ARE GONE"
+                    ];
+                    
+                    const randomMessage = hackingMessages[Math.floor(Math.random() * hackingMessages.length)];
+                    hackingText.textContent = randomMessage;
+                    
+                    // Случайное позиционирование
+                    hackingText.style.left = Math.random() * 70 + '%';
+                    hackingText.style.top = Math.random() * 70 + '%';
+                    hackingText.style.opacity = 0.9;
+                    
+                    hackingTextsContainer.appendChild(hackingText);
+                    
+                    // Убираем текст через время
+                    setTimeout(() => {
+                        hackingText.style.opacity = 0;
+                        setTimeout(() => {
+                            if (hackingText.parentNode) {
+                                hackingText.parentNode.removeChild(hackingText);
+                            }
+                        }, 1000);
+                    }, 2500);
+                }
+            }, 4000);
+        }
+
+        // Функция для запуска змейки из окон
+        function startSnakePopups() {
+            snakePopupInterval = setInterval(() => {
+                if (isFinalStage) return;
+                
+                createSnakePopups();
+            }, 15000);
+        }
+
+        // Функция для создания змейки из окон
+        function createSnakePopups() {
+            // Воспроизводим звук для змейки окон
+            popupSound.play().catch(e => console.log("Ошибка воспроизведения:", e));
+            
+            const numPopups = 12; // Увеличили количество окон
+            const popups = [];
+            
+            // Создаем окна по диагонали с большим разбросом
+            for (let i = 0; i < numPopups; i++) {
+                setTimeout(() => {
+                    const popup = document.createElement('div');
+                    popup.className = 'popup';
+                    
+                    // Позиционируем по диагонали с большим разбросом
+                    const offsetX = i * 60; // Увеличили расстояние между окнами
+                    const offsetY = i * 50 + (Math.random() * 100 - 50); // Добавили случайное смещение по Y
+                    popup.style.left = offsetX + 'px';
+                    popup.style.top = offsetY + 'px';
+                    
+                    popup.innerHTML = `
+                        <div class="popup-header">Warning</div>
+                        <div class="popup-content">System intrusion detected</div>
+                        <div class="popup-buttons">
+                            <button class="popup-button">OK</button>
+                        </div>
+                    `;
+                    
+                    popupsContainer.appendChild(popup);
+                    popups.push(popup);
+                    
+                    // Убираем окна змейкой
+                    if (i === numPopups - 1) {
+                        setTimeout(() => {
+                            for (let j = 0; j < popups.length; j++) {
+                                setTimeout(() => {
+                                    if (popups[j].parentNode) {
+                                        popups[j].parentNode.removeChild(popups[j]);
+                                    }
+                                }, j * 100);
+                            }
+                        }, 3000);
+                    }
+                }, i * 150);
+            }
+        }
+
+        // Функция для запуска финальной последовательности
+        function startFinalSequence() {
+            isFinalStage = true;
+            
+            // Останавливаем все интервалы
+            clearInterval(aggressiveTextInterval);
+            clearInterval(staticInterval);
+            clearInterval(popupInterval);
+            clearInterval(flickerInterval);
+            clearInterval(redFlickerInterval);
+            clearInterval(blueFlickerInterval);
+            clearInterval(greenFlickerInterval);
+            clearInterval(snakePopupInterval);
+            clearInterval(drippingPixelsInterval);
+            clearInterval(scanLinesInterval);
+            clearInterval(glitchLinesInterval);
+            clearInterval(binaryCodesInterval);
+            clearInterval(dataStreamsInterval);
+            clearInterval(eyesInterval);
+            clearInterval(corruptionInterval);
+            clearInterval(bloodSplatterInterval);
+            clearInterval(terminalTextsInterval);
+            clearInterval(facesInterval);
+            clearInterval(distortionInterval);
+            clearInterval(breathingInterval);
+            clearInterval(securityCamerasInterval);
+            clearInterval(hackingTextsInterval);
+            
+            // Останавливаем музыку
+            backgroundMusic.pause();
+            heartbeatAudio.pause();
+            whisperAudio.pause();
+            
+            // Убираем все элементы
+            aggressiveTextsContainer.innerHTML = '';
+            popupsContainer.innerHTML = '';
+            drippingPixelsContainer.innerHTML = '';
+            scanLinesContainer.innerHTML = '';
+            glitchLinesContainer.innerHTML = '';
+            binaryCodesContainer.innerHTML = '';
+            dataStreamsContainer.innerHTML = '';
+            eyesContainer.innerHTML = '';
+            terminalTextsContainer.innerHTML = '';
+            facesContainer.innerHTML = '';
+            securityCamerasContainer.innerHTML = '';
+            hackingTextsContainer.innerHTML = '';
+            staticElement.style.opacity = 0;
+            flickerElement.style.opacity = 0;
+            redFlickerElement.style.opacity = 0;
+            blueFlickerElement.style.opacity = 0;
+            greenFlickerElement.style.opacity = 0;
+            corruptionElement.style.opacity = 0;
+            bloodSplatterElement.style.opacity = 0;
+            distortionElement.style.opacity = 0;
+            breathingEffectElement.style.opacity = 0;
+            goAwayBtn.style.display = 'none';
+            
+            // Убираем красный круг (градиент)
+            circleGradient.style.display = 'none';
+            
+            // Создаем мрачную финальную сцену
+            createDarkFinalScene();
+        }
+
+        // Функция для создания мрачной финальной сцены
+        function createDarkFinalScene() {
+            // Включаем финальное аудио
+            finalAudio.play().catch(e => console.log("Ошибка воспроизведения финального аудио:", e));
+            
+            // Создаем эффект затемнения
+            const darkOverlay = document.createElement('div');
+            darkOverlay.style.position = 'absolute';
+            darkOverlay.style.top = '0';
+            darkOverlay.style.left = '0';
+            darkOverlay.style.width = '100%';
+            darkOverlay.style.height = '100%';
+            darkOverlay.style.backgroundColor = '#000';
+            darkOverlay.style.zIndex = '180';
+            darkOverlay.style.opacity = '0';
+            document.body.appendChild(darkOverlay);
+            
+            // Затемняем экран
+            setTimeout(() => {
+                darkOverlay.style.transition = 'opacity 3s';
+                darkOverlay.style.opacity = '0.9';
+                
+                // Показываем финальное сообщение
+                setTimeout(() => {
+                    finalMessage.style.opacity = 1;
+                    finalMessage.style.zIndex = '190';
+                    
+                    // Добавляем эффект дыхания к сообщению
+                    let breathIntensity = 1;
+                    const breathInterval = setInterval(() => {
+                        breathIntensity = 0.7 + Math.random() * 0.3;
+                        finalMessage.style.opacity = breathIntensity;
+                    }, 300);
+                    
+                    // Создаем эффект наблюдения
+                    const watchingText = document.createElement('div');
+                    watchingText.textContent = "I'M STILL WATCHING YOU...";
+                    watchingText.style.position = 'absolute';
+                    watchingText.style.bottom = '50px';
+                    watchingText.style.left = '50%';
+                    watchingText.style.transform = 'translateX(-50%)';
+                    watchingText.style.color = '#ff0000';
+                    watchingText.style.fontSize = '2rem';
+                    watchingText.style.fontFamily = "'VT323', monospace";
+                    watchingText.style.textShadow = '0 0 10px #ff0000';
+                    watchingText.style.zIndex = '190';
+                    watchingText.style.opacity = '0';
+                    document.body.appendChild(watchingText);
+                    
+                    // Показываем текст наблюдения
+                    setTimeout(() => {
+                        watchingText.style.transition = 'opacity 2s';
+                        watchingText.style.opacity = '1';
+                        
+                        // Создаем эффект закрытия камеры
+                        setTimeout(() => {
+                            const cameraClose = document.createElement('div');
+                            cameraClose.style.position = 'absolute';
+                            cameraClose.style.top = '0';
+                            cameraClose.style.left = '0';
+                            cameraClose.style.width = '100%';
+                            cameraClose.style.height = '100%';
+                            cameraClose.style.backgroundColor = '#000';
+                            cameraClose.style.zIndex = '200';
+                            cameraClose.style.opacity = '0';
+                            cameraClose.style.clipPath = 'circle(0% at 50% 50%)';
+                            document.body.appendChild(cameraClose);
+                            
+                            // Анимируем закрытие камеры
+                            setTimeout(() => {
+                                cameraClose.style.transition = 'clip-path 3s';
+                                cameraClose.style.clipPath = 'circle(100% at 50% 50%)';
+                                
+                                // Перенаправляем после завершения
+                                setTimeout(() => {
+                                    window.location.href = 'music.html';
+                                }, 3000);
+                            }, 1000);
+                        }, 4000);
+                    }, 2000);
+                }, 2000);
+            }, 1000);
+        }
+
+        // Запускаем инициализацию после загрузки страницы
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
